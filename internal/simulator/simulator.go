@@ -64,6 +64,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 			deviceAppKeys:        make(map[lorawan.EUI64]lorawan.AES128Key),
 			eventTopicTemplate:   c.Gateway.EventTopicTemplate,
 			commandTopicTemplate: c.Gateway.CommandTopicTemplate,
+			gatewayProfileId:     c.Gateway.GatewayProfileID,
 		}
 
 		go sim.start()
@@ -96,6 +97,7 @@ type simulation struct {
 	deviceAppKeys        map[lorawan.EUI64]lorawan.AES128Key
 	eventTopicTemplate   string
 	commandTopicTemplate string
+	gatewayProfileId     string
 }
 
 func (s *simulation) start() {
@@ -279,15 +281,15 @@ func (s *simulation) setupGateways() error {
 		if _, err := rand.Read(gatewayID[:]); err != nil {
 			return errors.Wrap(err, "read random bytes error")
 		}
-
 		_, err := as.Gateway().Create(context.Background(), &api.CreateGatewayRequest{
 			Gateway: &api.Gateway{
-				Id:              gatewayID.String(),
-				Name:            gatewayID.String(),
-				Description:     gatewayID.String(),
-				OrganizationId:  s.serviceProfile.OrganizationId,
-				NetworkServerId: s.serviceProfile.NetworkServerId,
-				Location:        &common.Location{},
+				Id:               gatewayID.String(),
+				Name:             gatewayID.String(),
+				Description:      gatewayID.String(),
+				OrganizationId:   s.serviceProfile.OrganizationId,
+				NetworkServerId:  s.serviceProfile.NetworkServerId,
+				Location:         &common.Location{},
+				GatewayProfileId: s.gatewayProfileId,
 			},
 		})
 		if err != nil {

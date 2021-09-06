@@ -61,6 +61,7 @@ type Config struct {
 			MaxCount             int    `mapstructure:"max_count"`
 			EventTopicTemplate   string `mapstructure:"event_topic_template"`
 			CommandTopicTemplate string `mapstructure:"command_topic_template"`
+			GatewayProfileID     string `mapstructure:"gateway_profile_id"`
 		} `mapstructure:"gateway"`
 	} `mapstructure:"simulator"`
 
