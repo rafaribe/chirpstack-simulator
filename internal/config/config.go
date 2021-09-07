@@ -45,8 +45,8 @@ type Config struct {
 		ServiceProfileID string        `mapstructure:"service_profile_id"`
 		Duration         time.Duration `mapstructure:"duration"`
 		ActivationTime   time.Duration `mapstructure:"activation_time"`
-
-		Device struct {
+		HttpEndpoint     string        `mapstructure:"http_endpoint"`
+		Device           struct {
 			Count           int           `mapstructure:"count"`
 			UplinkInterval  time.Duration `mapstructure:"uplink_interval"`
 			FPort           uint8         `mapstructure:"f_port"`

@@ -65,6 +65,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 			eventTopicTemplate:   c.Gateway.EventTopicTemplate,
 			commandTopicTemplate: c.Gateway.CommandTopicTemplate,
 			gatewayProfileId:     c.Gateway.GatewayProfileID,
+			httpEndpoint:         c.HttpEndpoint,
 		}
 
 		go sim.start()
@@ -98,6 +99,7 @@ type simulation struct {
 	eventTopicTemplate   string
 	commandTopicTemplate string
 	gatewayProfileId     string
+	httpEndpoint         string
 }
 
 func (s *simulation) start() {
@@ -146,7 +148,9 @@ func (s *simulation) init() error {
 	if err := s.setupApplicationIntegration(); err != nil {
 		return err
 	}
-
+	if err := s.setupHttpApplicationIntegration(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -154,6 +158,9 @@ func (s *simulation) tearDown() error {
 	log.Info("simulation: cleaning up")
 
 	if err := s.tearDownApplicationIntegration(); err != nil {
+		return err
+	}
+	if err := s.tearDownHttpApplicationIntegration(); err != nil {
 		return err
 	}
 
@@ -478,5 +485,31 @@ func (s *simulation) tearDownApplicationIntegration() error {
 		return errors.Wrap(token.Error(), "unsubscribe application integration error")
 	}
 
+	return nil
+}
+
+func (s *simulation) setupHttpApplicationIntegration() error {
+	log.Info("simulator: setting up http application integration")
+	log.Info(s.httpEndpoint)
+	_, err := as.Application().CreateHTTPIntegration(s.ctx, &api.CreateHTTPIntegrationRequest{
+		Integration: &api.HTTPIntegration{
+			ApplicationId:    s.applicationID,
+			Headers:          nil,
+			EventEndpointUrl: s.httpEndpoint,
+		},
+	})
+
+	if err != nil {
+		return errors.Wrap(err, "unsubscribe application http integration error")
+	}
+	return nil
+}
+
+func (s *simulation) tearDownHttpApplicationIntegration() error {
+	log.Info("simulator: tear-down application integration")
+	_, err := as.Application().DeleteHTTPIntegration(s.ctx, &api.DeleteHTTPIntegrationRequest{ApplicationId: s.applicationID})
+	if err != nil {
+		return errors.Wrap(err, "unsubscribe application http integration error")
+	}
 	return nil
 }
