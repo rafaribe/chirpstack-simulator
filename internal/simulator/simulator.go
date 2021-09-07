@@ -41,6 +41,11 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 			return errors.Wrap(err, "uuid from string error")
 		}
 
+		dpID, err := uuid.FromString(c.DeviceProfileID)
+		if err != nil {
+			return errors.Wrap(err, "uuid from string error")
+		}
+
 		pl, err := hex.DecodeString(c.Device.Payload)
 		if err != nil {
 			return errors.Wrap(err, "decode payload error")
@@ -66,6 +71,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, c config.Config) error {
 			commandTopicTemplate: c.Gateway.CommandTopicTemplate,
 			gatewayProfileId:     c.Gateway.GatewayProfileID,
 			httpEndpoint:         c.HttpEndpoint,
+			deviceProfileID:      dpID,
 		}
 
 		go sim.start()
@@ -133,10 +139,6 @@ func (s *simulation) init() error {
 		return err
 	}
 
-	if err := s.setupDeviceProfile(); err != nil {
-		return err
-	}
-
 	if err := s.setupApplication(); err != nil {
 		return err
 	}
@@ -169,10 +171,6 @@ func (s *simulation) tearDown() error {
 	}
 
 	if err := s.tearDownApplication(); err != nil {
-		return err
-	}
-
-	if err := s.tearDownDeviceProfile(); err != nil {
 		return err
 	}
 
@@ -297,6 +295,7 @@ func (s *simulation) setupGateways() error {
 				NetworkServerId:  s.serviceProfile.NetworkServerId,
 				Location:         &common.Location{},
 				GatewayProfileId: s.gatewayProfileId,
+				ServiceProfileId: s.serviceProfileID.String(),
 			},
 		})
 		if err != nil {
@@ -320,34 +319,6 @@ func (s *simulation) tearDownGateways() error {
 			return errors.Wrap(err, "delete gateway error")
 		}
 	}
-
-	return nil
-}
-
-func (s *simulation) setupDeviceProfile() error {
-	log.Info("simulator: creating device-profile")
-
-	dpName, _ := uuid.NewV4()
-
-	resp, err := as.DeviceProfile().Create(context.Background(), &api.CreateDeviceProfileRequest{
-		DeviceProfile: &api.DeviceProfile{
-			Name:              dpName.String(),
-			OrganizationId:    s.serviceProfile.OrganizationId,
-			NetworkServerId:   s.serviceProfile.NetworkServerId,
-			MacVersion:        "1.0.3",
-			RegParamsRevision: "B",
-			SupportsJoin:      true,
-		},
-	})
-	if err != nil {
-		return errors.Wrap(err, "create device-profile error")
-	}
-
-	dpID, err := uuid.FromString(resp.Id)
-	if err != nil {
-		return err
-	}
-	s.deviceProfileID = dpID
 
 	return nil
 }
