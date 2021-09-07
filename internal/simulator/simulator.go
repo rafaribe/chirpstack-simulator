@@ -294,6 +294,7 @@ func (s *simulation) setupGateways() error {
 				OrganizationId:   s.serviceProfile.OrganizationId,
 				NetworkServerId:  s.serviceProfile.NetworkServerId,
 				Location:         &common.Location{},
+				DiscoveryEnabled: true,
 				GatewayProfileId: s.gatewayProfileId,
 				ServiceProfileId: s.serviceProfileID.String(),
 			},
